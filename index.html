@@ -244,6 +244,33 @@
         max-width: 120px;
       }
     }
+    .load-more-container {
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px 48px;
+    }
+    .load-more-btn {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      color: var(--fg);
+      border-radius: 12px;
+      padding: 14px 32px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: none;
+    }
+    .load-more-btn.visible {
+      display: inline-block;
+    }
+    .load-more-btn:hover {
+      background: #171717;
+      transform: translateY(-1px);
+    }
+    .load-more-btn:active {
+      transform: translateY(0);
+    }
     footer {
       color: var(--muted);
       font-size: 12px;
@@ -306,6 +333,9 @@
 
   <main>
     <section id="grid" class="grid" aria-live="polite"></section>
+    <div class="load-more-container">
+      <button id="loadMoreBtn" class="load-more-btn">Cargar más</button>
+    </div>
   </main>
 
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -335,7 +365,7 @@
     {
       title: "Callejón europeo melancólico",
       src: "21r132r324f43yh5h5nh.png",
-      prompt: `Ultra-realistic urban portrait in a classic European alley with a subtle melancholic, sophisticated mood. Subject walks confidently toward the camera with relaxed natural stride, torso slightly left, subtle downward head tilt, gaze off-camera right, composed and contemplative. Layered smart-casual outfit: charcoal knee-length overcoat, dark hoodie, plain dark T-shirt, dark distressed slim jeans, dark ankle boots, round sunglasses. Soft diffused daylight key high front-right (-1 EV) with ambient fill (2:1 ratio), no rim light, WB 6200K. Full-frame, 85 mm at ~3.5 m, f/2.5, 1/320, ISO 200, AF-C. Full-body vertical 2:3, centered composition, eyes on upper third, soft bokeh background. Balanced dynamic range: Highlights -15, Shadows +10, gentle S-curve contrast. Cool desaturated grade emphasizing greys/blacks; blues/greens desaturated and cooled using Color Editor. Subtle fine grain and natural vignette. Clarity preserved with moderate sharpening and mild luminance noise reduction (5–10), ultra-realistic clean finish. Street fashion, natural light, filmic, contemplative modern aesthetic.`,
+      prompt: `Ultra-realistic urban portrait in a classic European alley with a subtle melancholic, sophisticated mood. Subject walks confidently toward the camera with relaxed natural stride, torso slightly left, subtle downward head tilt, gaze off-camera right, composed and contemplative. Layered smart-casual outfit: charcoal knee-length overcoat, dark hoodie, plain dark T-shirt, dark distressed slim jeans, dark ankle boots, round sunglasses. Soft diffused daylight key high front-right (-1 EV) with ambient fill (2:1 ratio), no rim light, WB 6200K. Full-frame, 85 mm at ~3.5 m, f/2.5, 1/320, ISO 200, AF-C. Full-body vertical 2:3, centered composition, eyes on upper third, soft bokeh background. Balanced dynamic range: Highlights -15, Shadows +10, gentle S-curve contrast. Cool desaturated grade emphasizing greys/blacks; blues/greens desaturated and cooled using Color Editor. Subtle fine grain and natural vignette. Clarity preserved with moderate sharpening and mild luminance noise reduction (5–10), ultra-realistic clean finish. Street fashion, natural light, filmic, contemplative modern aesthetic.`,
       category: "hombre"
     },
     {
@@ -805,10 +835,13 @@
   const closeBtn = document.getElementById('closeModal');
   const toast = document.getElementById('toast');
   const yearSpan = document.getElementById('year');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
   yearSpan.textContent = new Date().getFullYear();
 
+  const ITEMS_PER_PAGE = 12; // Número de items a mostrar por cada carga
   let currentCategory = 'todos';
   let filtered = ITEMS.slice();
+  let displayedCount = 0; // Contador de items mostrados
 
   function filterByCategory(category) {
     if (category === 'todos') {
@@ -816,12 +849,17 @@
     } else {
       filtered = ITEMS.filter(item => item.category === category);
     }
+    displayedCount = 0; // Resetear contador al cambiar categoría
     render(filtered);
+    updateLoadMoreButton();
   }
 
   function render(list) {
     grid.innerHTML = "";
-    list.forEach((item, idx) => {
+    const itemsToShow = list.slice(0, displayedCount + ITEMS_PER_PAGE);
+    displayedCount = itemsToShow.length;
+    
+    itemsToShow.forEach((item, idx) => {
       const card = document.createElement('article');
       card.className = 'item';
       card.tabIndex = 0;
@@ -862,6 +900,19 @@
     });
   }
 
+  function loadMore() {
+    render(filtered);
+    updateLoadMoreButton();
+  }
+
+  function updateLoadMoreButton() {
+    if (displayedCount >= filtered.length) {
+      loadMoreBtn.classList.remove('visible');
+    } else {
+      loadMoreBtn.classList.add('visible');
+    }
+  }
+
   function openModal(item) {
     modalImg.src = item.src;
     modalTitle.textContent = item.title || 'Prompt';
@@ -894,6 +945,9 @@
     });
   });
 
+  // Load more button
+  loadMoreBtn.addEventListener('click', loadMore);
+
   // Modal buttons
   copyBtn.addEventListener('click', async () => {
     try {
@@ -910,6 +964,7 @@
 
   // Initial render
   render(filtered);
+  updateLoadMoreButton();
   </script>
 </body>
 </html>
